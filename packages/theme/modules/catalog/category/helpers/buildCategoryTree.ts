@@ -45,20 +45,9 @@ export const loadCategoryTree = async (customQuery?: string): Promise<CategoryTr
   return getCategoryTree(categoryTree?.[0]);
 };
 
-export const findActiveCategoryLabel = (categoryTree: CategoryTreeInterface, path: string = '') => {
-  const categories = categoryTree?.items ?? false;
-  if (!categories) {
-    return '';
-  }
-
-  let categoryLabel = '';
-  const parent = findDeep(categories, (value: string, key, parentValue, _deepCtx) => {
-    if (key === 'slug' && path.includes(value)) {
-      // eslint-disable-next-line no-underscore-dangle
-      categoryLabel = _deepCtx.obj[_deepCtx._item.path[0]].label;
-    }
-    return key === 'slug' && path.includes(value);
-  });
-
-  return categoryLabel || parent?.category?.label || categories[0]?.label;
+export const findActiveCategory = (categoryTree: CategoryTreeInterface, slugToFind: string): CategoryTreeInterface | null => {
+  const categories = categoryTree?.items;
+  return categories
+    ? findDeep(categories, (value: unknown, key: string) => key === 'slug' && slugToFind.includes(value as string))?.parent ?? null
+    : null;
 };

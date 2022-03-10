@@ -25,7 +25,7 @@
         />
       </template>
       <SfMenuItem
-        v-for="(category, index) in currentItems || categoryTree"
+        v-for="(category, index) in currentItems || categoryTrees"
         :key="index"
         :label="category.label"
         :count="category.count"
@@ -36,7 +36,6 @@
   </SfSidebar>
 </template>
 <script lang="ts">
-import findDeep from 'deepdash/findDeep';
 import {
   SfSidebar, SfList, SfMenuItem,
 } from '@storefront-ui/vue';
@@ -47,6 +46,7 @@ import {
 import { categoryGetters } from '@vue-storefront/magento';
 import { useUiHelpers, useUiState, useCategory } from '~/composables';
 import { CategoryTreeInterface } from '~/modules/catalog/category/types';
+import { findActiveCategory } from '~/modules/catalog/category/helpers/buildCategoryTree';
 import { findAncestorsInCategoryTree, useMobileCategoryTree } from './logic';
 
 export default defineComponent({
@@ -56,22 +56,22 @@ export default defineComponent({
     SfMenuItem,
   },
   setup() {
-    const { categories, search } = useCategory('AppHeader:CategoryList');
+    const { categories, search } = useCategory();
     const { isMobileMenuOpen, toggleMobileMenu } = useUiState();
     const { getAgnosticCatLink } = useUiHelpers();
     const router = useRouter();
     const route = useRoute();
     const app = useContext();
 
-    const categoryTree = computed(
+    const categoryTrees = computed<CategoryTreeInterface[]>(
       () => categoryGetters.getCategoryTree(categories?.value?.[0])?.items.filter((c) => c.count > 0),
     );
 
     useAsync(() => {
       search({
-        pageSize: 10
-      })
-    })
+        pageSize: 10,
+      });
+    });
 
     const navigate = (category: CategoryTreeInterface) => {
       toggleMobileMenu();
@@ -79,8 +79,11 @@ export default defineComponent({
       router.push(path);
     };
 
-    const activeCategory: CategoryTreeInterface = findDeep(categoryTree.value, (value, key) => key === 'slug' && value === route.value.fullPath.replace('/default/c', ''))?.parent;
-    const initialHistory: CategoryTreeInterface[] = findAncestorsInCategoryTree(categoryTree.value as CategoryTreeInterface[], activeCategory);
+    const activeCategory = categoryTrees.value
+      .map((tree) => findActiveCategory(tree, route.value.fullPath.replace('/default/c', '')))
+      .find((searchResult) => Boolean(searchResult));
+
+    const initialHistory: CategoryTreeInterface[] = findAncestorsInCategoryTree(categoryTrees.value, activeCategory);
 
     const {
       current: currentCategory, history, currentItems, onGoCategoryUp, onGoCategoryDown,
@@ -91,7 +94,7 @@ export default defineComponent({
       currentItems,
       onGoCategoryUp,
       onGoCategoryDown,
-      categoryTree,
+      categoryTrees,
       history,
 
       navigate,

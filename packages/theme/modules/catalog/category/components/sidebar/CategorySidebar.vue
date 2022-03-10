@@ -4,7 +4,7 @@
     :height="'50vw'"
   >
     <SfAccordion
-      :open="activeCategory"
+      :open="activeCategoryLabel"
       :show-chevron="true"
     >
       <SfAccordionItem
@@ -54,23 +54,24 @@
   </SkeletonLoader>
 </template>
 
-<script>
+<script lang="ts">
 import {
   SfList,
   SfMenuItem,
   SfAccordion,
 } from '@storefront-ui/vue';
+
 import {
   defineComponent, onMounted, ref,
   useRoute,
 } from '@nuxtjs/composition-api';
 
 import { useUiHelpers } from '~/composables';
-import { loadCategoryTree, findActiveCategoryLabel } from '~/modules/catalog/category/helpers/buildCategoryTree';
-import SkeletonLoader from '~/components/SkeletonLoader';
+import { loadCategoryTree, findActiveCategory } from '~/modules/catalog/category/helpers/buildCategoryTree';
+import SkeletonLoader from '~/components/SkeletonLoader/index.vue';
+import { CategoryTreeInterface } from '~/modules/catalog/category/types';
 
 export default defineComponent({
-  name: 'CategorySidebar',
   components: {
     SfList,
     SfMenuItem,
@@ -79,21 +80,21 @@ export default defineComponent({
   },
   setup() {
     const uiHelpers = useUiHelpers();
-    const categoryTree = ref({});
-    const activeCategory = ref('');
+    const categoryTree = ref<CategoryTreeInterface | {}>({});
+    const activeCategoryLabel = ref(null);
     const isLoading = ref(true);
     const route = useRoute();
 
     onMounted(async () => {
-      categoryTree.value = await loadCategoryTree() ?? {};
-      activeCategory.value = findActiveCategoryLabel(categoryTree.value, route.value.fullPath);
+      categoryTree.value = await loadCategoryTree();
+      activeCategoryLabel.value = findActiveCategory(categoryTree.value, route.value.fullPath.replace('/default/c', ''))?.label;
       isLoading.value = false;
     });
 
     return {
       ...uiHelpers,
       categoryTree,
-      activeCategory,
+      activeCategoryLabel,
       isLoading,
     };
   },
