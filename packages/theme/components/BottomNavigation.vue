@@ -72,7 +72,7 @@
         </template>
       </SfBottomNavigationItem>
     </SfBottomNavigation>
-    <MobileMenuSidebar />
+    <MobileCategorySidebar />
   </div>
 </template>
 
@@ -80,14 +80,14 @@
 import { SfBottomNavigation, SfCircleIcon } from '@storefront-ui/vue';
 import { defineComponent, useRouter, useContext } from '@nuxtjs/composition-api';
 import { useUiState, useUser } from '~/composables';
-import MobileMenuSidebar from '~/components/MobileMenuSidebar.vue';
 import SvgImage from '~/components/General/SvgImage.vue';
+import MobileCategorySidebar from '~/modules/catalog/category/components/sidebar/MobileCategorySidebar/MobileCategorySidebar.vue';
 
 export default defineComponent({
   components: {
     SfBottomNavigation,
     SfCircleIcon,
-    MobileMenuSidebar,
+    MobileCategorySidebar,
     SvgImage,
   },
   setup() {

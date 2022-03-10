@@ -1,3 +1,6 @@
+import findDeep from 'deepdash/findDeep';
+import { getCategoryTree } from '~/modules/catalog/category/getters/categoryGetters';
+import { loadCategoriesCommand } from '~/modules/catalog/category/components/sidebar/command/loadCategoriesCommand';
 import { CategoryTreeInterface } from '~/modules/catalog/category/types';
 
 export const buildCategoryTree = (rootCategory: any, currentCategory: string, withProducts = false): CategoryTreeInterface => {
@@ -15,6 +18,7 @@ export const buildCategoryTree = (rootCategory: any, currentCategory: string, wi
   const childProductCount = hasChildren
     ? rootCategory
       .children
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
       .reduce((acc, curr) => acc + curr.product_count, 0)
     : 0;
 
@@ -33,4 +37,28 @@ export const buildCategoryTree = (rootCategory: any, currentCategory: string, wi
     count: childProductCount || rootCategory.product_count,
     isCurrent,
   };
+};
+
+export const loadCategoryTree = async (customQuery?: string): Promise<CategoryTreeInterface> => {
+  const categoryTree = await loadCategoriesCommand.execute(customQuery);
+
+  return getCategoryTree(categoryTree?.[0]);
+};
+
+export const findActiveCategoryLabel = (categoryTree: CategoryTreeInterface, path: string = '') => {
+  const categories = categoryTree?.items ?? false;
+  if (!categories) {
+    return '';
+  }
+
+  let categoryLabel = '';
+  const parent = findDeep(categories, (value: string, key, parentValue, _deepCtx) => {
+    if (key === 'slug' && path.includes(value)) {
+      // eslint-disable-next-line no-underscore-dangle
+      categoryLabel = _deepCtx.obj[_deepCtx._item.path[0]].label;
+    }
+    return key === 'slug' && path.includes(value);
+  });
+
+  return categoryLabel || parent?.category?.label || categories[0]?.label;
 };

@@ -65,8 +65,8 @@ import {
   useRoute,
 } from '@nuxtjs/composition-api';
 
-import { useSidebar } from './useSidebar.ts';
 import { useUiHelpers } from '~/composables';
+import { loadCategoryTree, findActiveCategoryLabel } from '~/modules/catalog/category/helpers/buildCategoryTree';
 import SkeletonLoader from '~/components/SkeletonLoader';
 
 export default defineComponent({
@@ -83,11 +83,10 @@ export default defineComponent({
     const activeCategory = ref('');
     const isLoading = ref(true);
     const route = useRoute();
-    const { loadCategoryTree, findActiveCategory } = useSidebar();
 
     onMounted(async () => {
       categoryTree.value = await loadCategoryTree() ?? {};
-      activeCategory.value = findActiveCategory(categoryTree.value, route.value.fullPath);
+      activeCategory.value = findActiveCategoryLabel(categoryTree.value, route.value.fullPath);
       isLoading.value = false;
     });
 
